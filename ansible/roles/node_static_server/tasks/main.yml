@@ -1,0 +1,21 @@
+---
+- name: 'Instala "node-static-server"'
+  npm:
+    name: 'static-server'
+    global: yes
+    state: latest
+  ignore_errors: yes
+  become: yes
+
+- name: 'Instala "node-static-server" 2'
+  shell: sudo npm install static-server -g -y
+  become: yes
+
+- name: 'Remove pm2 static-server'
+  shell: sudo pm2 del static-server
+  ignore_errors: True
+  become: yes
+
+- name: 'Cria pm2 static-server'
+  shell: cd /var/www/site/ && sudo pm2 start static-server -- -p 80
+  become: yes

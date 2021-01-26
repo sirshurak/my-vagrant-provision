@@ -1,0 +1,10 @@
+---
+- hosts: server1
+  roles:
+    - server1
+    - node_server_server
+
+- hosts: server2
+  roles:
+    - server2
+    - node_static_server

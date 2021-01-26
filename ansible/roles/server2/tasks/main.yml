@@ -1,0 +1,20 @@
+---
+- name: 'Cria diretório do site'
+  become: yes
+  file:
+    path: /var/www/site/
+    state: directory
+
+- name: 'Instala pacotes necessários'
+  yum:
+    update_cache: yes
+    name: ['unzip']
+    state: present
+  become: yes
+
+- name: 'Unzip server'
+  unarchive:
+    src: /vagrant/plataforma-static.zip
+    dest: /var/www/site/
+    remote_src: no
+  become: yes

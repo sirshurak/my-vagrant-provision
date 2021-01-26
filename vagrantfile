@@ -1,0 +1,63 @@
+Vagrant.configure("2") do |config|
+    config.vm.box = "centos/7"
+    config.vm.synced_folder ".", "/vagrant", :mount_options => ["dmode=777", "fmode=666"]
+
+    config.ssh.insert_key = false
+#     ssh-keygen -m PEM -t rsa -b 2048 -f vagrant_rsa.pem -N ''
+    config.ssh.private_key_path = ["keys/vagrant_rsa.pem", "~/.vagrant.d/insecure_private_key"]
+    config.vm.provision "file", source: "keys/vagrant_rsa.pub", destination: "~/.ssh/authorized_keys"
+    config.vm.provision "file", source: "keys/vagrant_rsa.pem", destination: "~/.ssh/id_rsa"
+    config.vm.provision "shell",
+     inline: "sudo yum install epel-release -y && \
+          sudo cp /vagrant/templates/fastestmirror.conf /etc/yum/pluginconf.d/fastestmirror.conf && \
+          sudo yum clean all && \
+          sudo yum install unzip -y && \
+          sudo yum install lsof -y && \
+          sudo chgrp 545 /home/vagrant/.ssh/id_rsa && \
+          sudo chmod 600 /home/vagrant/.ssh/id_rsa"
+  
+    config.vm.define "Ansible" do |ansible|
+          ansible.vm.network "private_network", ip: "10.42.0.2"
+          ansible.vm.provision "shell",
+               inline: "sudo yum install ansible -y && \
+                    sudo ansible-galaxy collection install community.general"
+          ansible.vm.provider "virtualbox" do |v|
+               v.name = "Ansible"
+          end
+    end
+
+    config.vm.define "node-server" do |ns|
+          ns.vm.network "private_network", ip: "10.42.0.3"
+          ns.vm.network "forwarded_port", guest: 80, host: 8081
+          ns.vm.provider "virtualbox" do |v|
+               v.name = "Node Server"
+          end
+    end
+
+    config.vm.define "node-static-server" do |nss|
+          nss.vm.network "private_network", ip: "10.42.0.4"
+          nss.vm.network "forwarded_port", guest: 80, host: 8080
+          nss.vm.provider "virtualbox" do |v|
+               v.name = "Node Static Server"
+          end
+     end
+
+     config.vm.define "docker" do |docker|
+          docker.vm.network "private_network", ip: "10.42.0.5"
+          docker.vm.provision "shell",
+               inline: "sudo yum install -y yum-utils && \
+                    sudo yum-config-manager \
+                    --add-repo \
+                    https://download.docker.com/linux/centos/docker-ce.repo -y && \
+                    sudo yum install docker-ce docker-ce-cli containerd.io -y && \
+                    sudo systemctl start docker"
+          docker.vm.provider "virtualbox" do |v|
+               v.name = "Docker"
+          end
+     end
+
+     config.vm.provider "virtualbox" do |v|
+          v.memory = 1024
+          v.cpus = 2
+     end
+end

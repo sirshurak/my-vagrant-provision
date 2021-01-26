@@ -1,0 +1,46 @@
+---
+- name: 'Pega pacote nodejs 15.x'
+  shell: 'node --version || curl -sL https://rpm.nodesource.com/setup_15.x | sudo -E bash -'
+  args:
+    warn: no
+  become: yes
+
+- name: 'Instala pacotes de dependencia do sistema operacional'
+  yum:
+    update_cache: yes
+    name: "{{ node_package }}"
+    state: present
+  become: yes
+
+- name: 'Instala "yarn"'
+  npm:
+    name: yarn
+    global: yes
+    state: latest
+  ignore_errors: yes
+  become: yes
+
+- name: 'Instala "pm2"'
+  npm:
+    name: pm2
+    global: yes
+    state: latest
+  ignore_errors: yes
+  become: yes
+  
+
+- name: 'Habilita porta 80 para requisições'
+  iptables:
+    chain: INPUT
+    protocol: tcp
+    destination_port: '80'
+    jump: ACCEPT
+    action: insert
+  become: yes
+
+- name: 'Habilita porta 80 para requisições 2'
+  shell: 'sudo iptables -I INPUT -p tcp --dport 80 --syn -j ACCEPT'
+  args:
+    warn: no
+  become: yes
+    
