@@ -50,7 +50,8 @@ Vagrant.configure("2") do |config|
                     --add-repo \
                     https://download.docker.com/linux/centos/docker-ce.repo -y && \
                     sudo yum install docker-ce docker-ce-cli containerd.io -y && \
-                    sudo systemctl start docker"
+                    sudo systemctl start docker && \
+                    sudo yum install docker-compose -y"
           docker.vm.provider "virtualbox" do |v|
                v.name = "Docker"
           end
